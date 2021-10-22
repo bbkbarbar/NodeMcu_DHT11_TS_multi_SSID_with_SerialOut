@@ -29,6 +29,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
+#include <EEPROM.h>
 #include <ThingSpeak.h>
 
 
@@ -69,6 +70,12 @@ const char * myWriteAPIKey = SECRET_WRITE_APIKEY;
 // SoftSerial
 //==================================
 SoftwareSerial serialOut(SOFT_SERIAL_RX, SOFT_SERIAL_TX);      // (Rx, Tx)
+
+//==================================
+// EEPROM
+//==================================
+int eepromAddr =                   0;
+int eepromAddr2 =                 10;
 
 
 //==================================
@@ -214,6 +221,11 @@ void HandleNotFound(){
 String setAction(){
   String value = server.arg("value"); //this lets you access a query param (http://x.x.x.x/set?value=12)
   tempSet = value.toInt();
+
+  // save into eeprom
+  EEPROM.write(eepromAddr, tempSet);
+  EEPROM.commit();
+  
   Serial.println("Try to SET: " + String(tempSet) );
   String m = String("Target temperature value set: ") + String(tempSet);
   return m;
@@ -400,7 +412,10 @@ void setup() {
 
   elapsedTime = millis();
   
-  EEPROM.write(0, updateCount);
+  // EEPROM
+  EEPROM.begin(128);
+  // EEPROM read methods can not be used before the first write method..
+  tempSet = EEPROM.read(eepromAddr);
 
   turnLED(ON);
 
@@ -415,8 +430,6 @@ void setup() {
   serialOut.begin(SOFT_SERIAL_BOUND_RATE);
   Serial.println("SoftSerial initialized");
 
-  // TODO: read tempSet value from EEPROM
-  
   
   dht.setup(DHT11_PIN, DHTesp::DHT11); //for DHT11 Connect DHT sensor to GPIO 17
   //dht.setup(DHTpin, DHTesp::DHT22); //for DHT22 Connect DHT sensor to GPIO 17
@@ -465,7 +478,7 @@ void sensorLoop(long now){
     turnLED(ON);
     float humidity = dht.getHumidity();
     float temperature = dht.getTemperature();
-    float ts = tempSet / 10;
+    float ts = ((float)tempSet) / 10;
     turnLED(OFF);
 
     valC = temperature + TEMPERATURE_CORRECTION;
