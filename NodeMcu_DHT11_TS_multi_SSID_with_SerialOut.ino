@@ -79,6 +79,8 @@ float valF = NAN;
 float valH = NAN;
 float valT = NAN;
 
+int tempSet = 150; // means 15,0 °C
+
 int lastTSUpdateStatus = -1;
 
 long updateCount = 0;
@@ -207,6 +209,14 @@ void HandleNotFound(){
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   server.send(404, "text/html", message);
+}
+
+String setAction(){
+  String value = server.arg("value"); //this lets you access a query param (http://x.x.x.x/set?value=12)
+  tempSet = value.toInt();
+  Serial.println("Try to SET: " + String(tempSet) );
+  String m = String("Target temperature value set: ") + String(tempSet);
+  return m;
 }
 
 void HandleNotRstEndpoint(){
@@ -404,6 +414,8 @@ void setup() {
 
   serialOut.begin(SOFT_SERIAL_BOUND_RATE);
   Serial.println("SoftSerial initialized");
+
+  // TODO: read tempSet value from EEPROM
   
   
   dht.setup(DHT11_PIN, DHTesp::DHT11); //for DHT11 Connect DHT sensor to GPIO 17
@@ -418,13 +430,14 @@ void setup() {
   //server.on ("/save", handleSave);
   server.on("/pure", showPureValues);
   server.on("/rst", HandleNotRstEndpoint);
+  server.on("/set", setAction);
   server.onNotFound( HandleNotFound );
   server.begin();
   Serial.println("HTTP server started at ip " + WiFi.localIP().toString() + String("@ port: ") + String(SERVER_PORT) );
 
   turnLED(OFF);
 
-  Serial.println("Status\tHumidity (%)\tTemperature (C)\t(F)\tHeatIndex (C)\t(F)");
+  Serial.println("PhaseStatus\tStatus\tHumidity (%)\tTemperature (C)\tTempSet\t(F)\tHeatIndex (C)\t(F)");
   lastTemp = -100000;
 
   delay(10000);
@@ -452,6 +465,7 @@ void sensorLoop(long now){
     turnLED(ON);
     float humidity = dht.getHumidity();
     float temperature = dht.getTemperature();
+    float ts = tempSet / 10;
     turnLED(OFF);
 
     valC = temperature + TEMPERATURE_CORRECTION;
@@ -459,15 +473,16 @@ void sensorLoop(long now){
     valF = dht.toFahrenheit(temperature);
     valT = dht.computeHeatIndex(temperature, humidity, false);
    
-    Serial.print("PhaseStatus: ");
-    Serial.print(lastPhaseStatus);
-    Serial.print("\t");
+    Serial.print("\t" + lastPhaseStatus);
+    Serial.print("\t\t");
     Serial.print(dht.getStatusString());
     Serial.print("\t");
     Serial.print(humidity, 1);
     Serial.print("% \t\t");
     Serial.print(temperature, 1);
     Serial.print(" C\t\t");
+    Serial.print(ts, 1);
+    Serial.print(" C\t");
     Serial.print(valF, 1);
     Serial.print(" F\t\t");
     Serial.print(valT, 1);
@@ -502,18 +517,26 @@ void sensorLoop(long now){
     if(tempInt < 100){
       tempStr = "0" + tempStr;
     }
+    String setStr = String(tempSet);
+    
+    if(tempSet < 100){
+      setStr = "0" + setStr;
+    }
+    if(tempSet < 10){
+      setStr = "0" + setStr;
+    }
+    /**/
     
     
     String line = "D" + String(lastPhaseStatus);
     line += "-" + String(humidityInt) + "%";
     line += tempStr + "C";
+    line += setStr + "C";
     line += "2";
 
-    Serial.print("Try to send \"" + line + "\" on softSerial");
+    Serial.println("\"" + line + "\"");
     //serialOut.println("1|25.40|63.00|0");
     serialOut.println(line);
-    
-    Serial.println(" ..Done");
     
   
     if(errorCount >= ERROR_COUNT_BEFORE_RESTART){
