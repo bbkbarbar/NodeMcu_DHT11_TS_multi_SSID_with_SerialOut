@@ -10,7 +10,7 @@
 #define SKIP_TS_COMMUNICATION
 
 #define VERSION                 "v2.4_sd"
-#define BUILDNUM                      18
+#define BUILDNUM                      19
 
 #define TEMPERATURE_CORRECTION   (-0.5f)
 
@@ -394,6 +394,9 @@ int initWiFi(){
     String ipMessage = "I" + WiFi.localIP().toString();
     serialOut.println(ipMessage);
     Serial.println("SENT: " + ipMessage );
+    // for reconnecting feature
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(true);
   }else{
     Serial.println("");
     Serial.print("ERROR: Unable to connect to ");
@@ -466,12 +469,28 @@ void setup() {
 void wifiConnectionCheck(long now){
   if( (now - lastWiFiCheck) >= DELAY_BETWEEN_WIFI_CONNECTION_STATUS_CHECKS_IN_MS ){
     lastWiFiCheck = now;
-    //TODO HERE
     
-
-      
+    switch (WiFi.status()){
+      case WL_NO_SSID_AVAIL:
+        Serial.println("Configured SSID cannot be reached");
+        serialOut.println("IWiFi\nUnavailable");
+        turnLED(ON);
+        break;
+      case WL_CONNECTED:
+        turnLED(OFF);
+        Serial.println("Connection successfully established");
+        break;
+      case WL_CONNECT_FAILED:
+        turnLED(ON);
+        Serial.println("Connection failed");
+        serialOut.println("IConnection\nfailed");
+        //initWiFi();
+        break;
+    }
+    Serial.printf("Connection status: %d\n", WiFi.status());
+    Serial.print("RRSI: ");
+    Serial.println(WiFi.RSSI());
   }
-  
 }
 
 
@@ -574,7 +593,8 @@ void sensorLoop(long now){
 }
  
 void loop() {
-  long t = millis();
+  long now = millis();
   server.handleClient();
-  sensorLoop(t);
+  wifiConnectionCheck(now);
+  sensorLoop(now);
 }

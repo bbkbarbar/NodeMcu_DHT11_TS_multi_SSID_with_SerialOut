@@ -17,7 +17,6 @@
 #define SOFT_SERIAL_RX                     5 //  5 means D1 in NodeMCU board
 #define SOFT_SERIAL_TX                     4 //  4 means D2 in NodeMCU board
 
-
 // Server functions
 #define SERVER_PORT                       80
 
@@ -27,6 +26,8 @@
 
 // delay for normal working
 #define DELAY_BETWEEN_ITERATIONS_IN_MS 30000
+
+#define DELAY_BETWEEN_WIFI_CONNECTION_STATUS_CHECKS_IN_MS 20000
 
 // problem handling
 #define ERROR_COUNT_BEFORE_RESTART         3
