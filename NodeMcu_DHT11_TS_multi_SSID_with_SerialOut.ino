@@ -96,7 +96,8 @@ String lastPhaseStatus = "";
 //==================================
 // Other variables
 //==================================
-long lastTemp = 0;      //The last measurement
+long lastTemp = 0;      //time of the last measurement
+long lastWiFiCheck = 0;
 int errorCount = 0;
 
 unsigned long elapsedTime = 0;
@@ -461,6 +462,18 @@ void setup() {
 // ==========================================================================================================================
 //                                                        Loop
 // ==========================================================================================================================
+
+void wifiConnectionCheck(long now){
+  if( (now - lastWiFiCheck) >= DELAY_BETWEEN_WIFI_CONNECTION_STATUS_CHECKS_IN_MS ){
+    lastWiFiCheck = now;
+    //TODO HERE
+    
+
+      
+  }
+  
+}
+
 
 void sensorLoop(long now){
   if( (now - lastTemp) > DELAY_BETWEEN_ITERATIONS_IN_MS ){ //Take a measurement at a fixed time (durationTemp = 5000ms, 5s)
