@@ -10,7 +10,7 @@
 #define SKIP_TS_COMMUNICATION
 
 #define VERSION                 "v2.4_sd"
-#define BUILDNUM                      19
+#define BUILDNUM                      20
 
 #define TEMPERATURE_CORRECTION   (-0.5f)
 
@@ -253,25 +253,52 @@ String generateHtmlBody(){
   m += "<br>" + String(LOCATION_NAME);
   m += "</h4><br>";
 
-  m += "<center>";
+  m += "\n\t<center>\n";
 
+  // HOERZET
   m += "\t\t<h1>";
-  m += "H&otilde;&eacute;rzet:\n\r</h2><h1>";
+  m += "H&otilde;&eacute;rzet:\n\t\t";
   m += String(valT);
   m += " &#8451;</h1>\n\r";
 
-  m+= "<h3>(" + String((int)valC) + " &#8451;)</h3>";
-  
-  m += "<br>";
+  // MERT (ES KORRIGALT) HOMERSEKLET
+  m+= "\t\t<h3>(" + String(valC) + " &#8451;)</h3>";
 
-  m += "<br><h2>";
-  m += "P&aacute;ratartalom:\n\r</h2><h1>";
+  // BEALLITOTT ERTEK
+  m+= "\n\n\t\t<h1>Be&aacute;ll&iacute;tott:</h1>\n";
+  m+= "\t\t</h2><h1>" + String(((float)tempSet)/10) + " &#8451;</h1>";
+  //m += "<br>";
+
+  // ENERGIA FORRAS VISSZAJELZESE
+  String energySource = "";
+  if(lastPhaseStatus == String(PHASE_STATUS_CHEAP)){
+    energySource = "&darr; &dollar; &darr;";
+  }else 
+  if(lastPhaseStatus == String(PHASE_STATUS_EXPENSIVE)){
+    energySource = "&dollar; &dollar; &dollar;";
+  }else{
+    energySource = "? &dollar; ?";
+  }
+
+  m += "\n\t\t<h2>" + energySource + "</h2>\n\n";
+
+
+  // FŰTÉS visszajelzése
+  if(true){
+    m += "\t\t<h1>F&Udblac;T&Edot;S</h1>";
+  }else{
+    m += "\t\t<br>";
+  }
+  
+  // PARATARTALOM
+  m += "\n\n\t\t<br><h2>";
+  m += "P&aacute;ratartalom:\n\r\t\t</h2><h1>";
   m += String((int)valH);
-  m += " %</h1><br>";
+  m += " %</h1><br>\n";
 
   //m += generateHtmlSaveValuePart();
 
-  m += "</center>";
+  m += "\n\t</center>";
 
   m += "\n<br>ErrorCount: " + String(errorCount);
   
@@ -319,7 +346,7 @@ String getCurrentPhaseState(){
       //Serial.print(payload);
       //Serial.println(payload);             //Print the response payload
     }else{
-      payload = "?";
+      payload = String(PHASE_STATUS_UNKNOWN);
       Serial.println("httpCode: " + String(httpCode));
     }
     //Serial.println("");

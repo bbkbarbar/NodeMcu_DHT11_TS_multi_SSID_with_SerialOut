@@ -1,6 +1,6 @@
 
 #define TITLE          "IoT TH sensor"
-#define SOFTWARE_NAME  "IoT TH sensor"
+#define SOFTWARE_NAME  "IoT thermostat"
 
 #define LOCATION_NAME  "Nappali"
 #define IOT_DEVICE_ID   1
@@ -31,3 +31,7 @@
 
 // problem handling
 #define ERROR_COUNT_BEFORE_RESTART         3
+
+#define PHASE_STATUS_EXPENSIVE             "0"
+#define PHASE_STATUS_CHEAP                 "1"
+#define PHASE_STATUS_UNKNOWN               "?"
