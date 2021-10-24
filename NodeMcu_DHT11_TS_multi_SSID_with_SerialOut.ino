@@ -257,7 +257,7 @@ String generateHtmlBody(){
 
   // HOERZET
   m += "\t\t<h1>";
-  m += "H&otilde;&eacute;rzet:\n\t\t";
+  m += "H&otilde;&eacute;rzet:\n\r\t\t</h1><h1>";
   m += String(valT);
   m += " &#8451;</h1>\n\r";
 
