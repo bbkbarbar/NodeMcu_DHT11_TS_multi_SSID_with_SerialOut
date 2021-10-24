@@ -8,6 +8,10 @@
 #define PHASE_CHECKER_IP  "192.168.1.170"
 
 
+//in 0.1 C
+#define OVERHEATING_DIFFERENCE            5
+
+
 // =============================
 // Pinout configuration
 // =============================
@@ -32,6 +36,9 @@
 // problem handling
 #define ERROR_COUNT_BEFORE_RESTART         3
 
-#define PHASE_STATUS_EXPENSIVE             "0"
-#define PHASE_STATUS_CHEAP                 "1"
-#define PHASE_STATUS_UNKNOWN               "?"
+#define PHASE_STATUS_EXPENSIVE           "0"
+#define PHASE_STATUS_CHEAP               "1"
+#define PHASE_STATUS_UNKNOWN             "?"
+
+#define NOTHING                            0
+#define HEATING                            1

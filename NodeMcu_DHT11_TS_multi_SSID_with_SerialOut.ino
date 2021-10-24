@@ -10,7 +10,7 @@
 #define SKIP_TS_COMMUNICATION
 
 #define VERSION                 "v2.4_sd"
-#define BUILDNUM                      20
+#define BUILDNUM                      21
 
 #define TEMPERATURE_CORRECTION   (-0.5f)
 
@@ -87,6 +87,8 @@ float valH = NAN;
 float valT = NAN;
 
 int tempSet = 150; // means 15,0 °C
+
+short action = NOTHING; // can be NOTHING or HEATING
 
 int lastTSUpdateStatus = -1;
 
@@ -284,7 +286,7 @@ String generateHtmlBody(){
 
 
   // FŰTÉS visszajelzése
-  if(true){
+  if(action == HEATING){
     m += "\t\t<h1>F&Udblac;T&Edot;S</h1>";
   }else{
     m += "\t\t<br>";
@@ -521,12 +523,28 @@ void wifiConnectionCheck(long now){
 }
 
 
+short decide(){
+
+  int compareValue = tempSet;
+  if( lastPhaseStatus == String(PHASE_STATUS_CHEAP) ){
+    compareValue += OVERHEATING_DIFFERENCE; // TODO
+  }
+  
+  if( ((int)(valC*10)) < compareValue ){
+    action = HEATING;
+  }else{
+    action = NOTHING;
+  }
+  return action;
+}
+
+
 void sensorLoop(long now){
   if( (now - lastTemp) > DELAY_BETWEEN_ITERATIONS_IN_MS ){ //Take a measurement at a fixed time (durationTemp = 5000ms, 5s)
     //delay(dht.getMinimumSamplingPeriod());
     //delay(dht.getMinimumSamplingPeriod());
     lastPhaseStatus = getCurrentPhaseState();
-    if(lastPhaseStatus == "?"){
+    if(lastPhaseStatus == String(PHASE_STATUS_UNKNOWN)){
       // try again one more time
       lastPhaseStatus = getCurrentPhaseState();
     }
@@ -582,6 +600,8 @@ void sensorLoop(long now){
     Serial.println("Error count: " + String(errorCount));
     #endif
 
+    decide();
+
     lastTemp = now;
     int tempInt = valC*10;
     int humidityInt = valH;
@@ -604,7 +624,8 @@ void sensorLoop(long now){
     line += "-" + String(humidityInt) + "%";
     line += tempStr + "C";
     line += setStr + "C";
-    line += "2";
+    // "heating?" part
+    line += action;
 
     Serial.println("\"" + line + "\"");
     //serialOut.println("1|25.40|63.00|0");
