@@ -10,7 +10,7 @@
 #define SKIP_TS_COMMUNICATION
 
 #define VERSION                 "v2.4_sd"
-#define BUILDNUM                      21
+#define BUILDNUM                      22
 
 #define TEMPERATURE_CORRECTION   (-0.5f)
 
@@ -88,6 +88,7 @@ float valT = NAN;
 
 int tempSet = 150; // means 15,0 °C
 
+int overheatingDifference = 0;
 short action = NOTHING; // can be NOTHING or HEATING
 
 int lastTSUpdateStatus = -1;
@@ -221,7 +222,7 @@ void HandleNotFound(){
   server.send(404, "text/html", message);
 }
 
-String setAction(){
+String actionTempSet(){
   String value = server.arg("value"); //this lets you access a query param (http://x.x.x.x/set?value=12)
   tempSet = value.toInt();
 
@@ -231,6 +232,19 @@ String setAction(){
   
   Serial.println("Try to SET: " + String(tempSet) );
   String m = String("Target temperature value set: ") + String(tempSet);
+  return m;
+}
+
+String actionOverheatSet(){
+  String value = server.arg("value"); //this lets you access a query param (http://x.x.x.x/set?value=12)
+  overheatingDifference = value.toInt();
+
+  // save into eeprom
+  EEPROM.write(eepromAddr2, overheatingDifference);
+  EEPROM.commit();
+  
+  Serial.println("Try to set overheating: " + String(overheatingDifference) );
+  String m = String("Overheating value set: ") + String(overheatingDifference);
   return m;
 }
 
@@ -445,11 +459,6 @@ void setup() {
 
   elapsedTime = millis();
   
-  // EEPROM
-  EEPROM.begin(128);
-  // EEPROM read methods can not be used before the first write method..
-  tempSet = EEPROM.read(eepromAddr);
-
   turnLED(ON);
 
   errorCount = 0;
@@ -462,6 +471,14 @@ void setup() {
 
   serialOut.begin(SOFT_SERIAL_BOUND_RATE);
   Serial.println("SoftSerial initialized");
+
+  // EEPROM
+  EEPROM.begin(128);
+  // EEPROM read methods can not be used before the first write method..
+  tempSet = EEPROM.read(eepromAddr);
+  Serial.println("Set temperature: " + String(tempSet));
+  overheatingDifference = EEPROM.read(eepromAddr2);
+  Serial.println("Overheating difference: " + String(overheatingDifference));
 
   
   dht.setup(DHT11_PIN, DHTesp::DHT11); //for DHT11 Connect DHT sensor to GPIO 17
@@ -476,7 +493,8 @@ void setup() {
   //server.on ("/save", handleSave);
   server.on("/pure", showPureValues);
   server.on("/rst", HandleNotRstEndpoint);
-  server.on("/set", setAction);
+  server.on("/set", actionTempSet);
+  server.on("/overheat", actionOverheatSet);
   server.onNotFound( HandleNotFound );
   server.begin();
   Serial.println("HTTP server started at ip " + WiFi.localIP().toString() + String("@ port: ") + String(SERVER_PORT) );
@@ -527,7 +545,7 @@ short decide(){
 
   int compareValue = tempSet;
   if( lastPhaseStatus == String(PHASE_STATUS_CHEAP) ){
-    compareValue += OVERHEATING_DIFFERENCE; // TODO
+    compareValue += overheatingDifference; // TODO
   }
   
   if( ((int)(valC*10)) < compareValue ){

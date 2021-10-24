@@ -8,10 +8,6 @@
 #define PHASE_CHECKER_IP  "192.168.1.170"
 
 
-//in 0.1 C
-#define OVERHEATING_DIFFERENCE            5
-
-
 // =============================
 // Pinout configuration
 // =============================
